@@ -1,5 +1,3 @@
-EXFIL_TIME = 5
-
 local start_pos = vector_origin
 local end_pos
 local storage = {}
@@ -29,7 +27,7 @@ local function CreateMapData(area)
             BoxSize = Vector( 25, 25, 25 ),
             OverrideExfilBool = 0,
             ZombieSlayDelay = 1,
-            ExfilTime = EXFIL_TIME
+            ExfilTime = EXFIL_TIME or 5
         } 
     }
     table.insert( storage[game.GetMap()], data )
