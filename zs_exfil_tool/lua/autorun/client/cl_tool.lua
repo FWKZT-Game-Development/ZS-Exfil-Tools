@@ -27,12 +27,14 @@ local function CreateMapData(area)
             BoxSize = Vector( 25, 25, 25 ),
             OverrideExfilBool = 0,
             ZombieSlayDelay = 1,
-            ExfilTime = EXFIL_TIME or 5
+            ExfilTime = EXFIL_TIME or 5,
+            ExfilDeadline = 120 --GAMEMODE.TimeToExfil
         } 
     }
     table.insert( storage[game.GetMap()], data )
 end
 
+--example : exfil_create testarea
 concommand.Add("exfil_create", function( ply, cmd, args )
     if not ExfilDataHasArea(args[1]) then
         CreateMapData( args[1] )
@@ -42,6 +44,7 @@ concommand.Add("exfil_create", function( ply, cmd, args )
     PrintTable(storage)
 end)
 
+--example : exfil_origin testarea
 concommand.Add("exfil_origin", function( ply, cmd, args )
     start_pos = ply:GetEyeTrace().HitPos
 
@@ -55,6 +58,7 @@ concommand.Add("exfil_origin", function( ply, cmd, args )
 
     PrintTable(storage)
 end)
+--example : exfil_size testarea 200 200 200
 concommand.Add("exfil_size", function( ply, cmd, args )
     end_pos = Vector( args[2], args[3], args[4] )
     for _, data in ipairs( storage[ game.GetMap() ] ) do
@@ -67,6 +71,7 @@ concommand.Add("exfil_size", function( ply, cmd, args )
 
     PrintTable(storage)
 end)
+--example : exfil_config testarea 0 3 5 120
 concommand.Add("exfil_config", function( ply, cmd, args )
     for _, data in ipairs( storage[ game.GetMap() ] ) do
         for area, stored in pairs( data ) do
@@ -74,12 +79,14 @@ concommand.Add("exfil_config", function( ply, cmd, args )
                 stored.OverrideExfilBool = args[2]
                 stored.ZombieSlayDelay = args[3]
                 stored.ExfilTime = args[4]
+                stored.ExfilDeadline = args[5]
             end
         end
     end
 
     PrintTable(storage)
 end)
+--example : exfil_save
 concommand.Add("exfil_save", function( ply, cmd, args )
     local tab = util.TableToJSON( storage )
     file.CreateDir( "exfil" )
