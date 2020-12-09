@@ -5,6 +5,21 @@ local storage = {}
 hook.Add( "InitPostEntity", "Exfil.CreateToolTable", function()
     if GAMEMODE_NAME == "sandbox" then
         storage[ game.GetMap() ] = {}
+
+        --Load json data so we can let devs view positions.
+        local files, dirs = file.Find( "exfil/*", "DATA" )
+        for _, map in ipairs( files ) do
+            if string.TrimRight(map,".json") == string.lower(game.GetMap()) then
+                local f = file.Open( "exfil/"..string.lower(game.GetMap())..".json", "r", "DATA" )
+                local stored_mapdata = util.JSONToTable( f:ReadLine() )
+
+                for i, data in pairs( stored_mapdata ) do
+                    for area, d in pairs( data ) do
+                        table.insert( storage[game.GetMap()], d )
+                    end
+                end
+            end
+        end
     end
 end )
 
@@ -27,8 +42,9 @@ local function CreateMapData(area)
             BoxSize = Vector( 25, 25, 25 ),
             OverrideExfilBool = 0,
             ZombieSlayDelay = 1,
-            ExfilTime = EXFIL_TIME or 5,
-            ExfilDeadline = 120 --GAMEMODE.TimeToExfil
+            ExfilTime = EXFIL_TIME,
+            ExfilDeadline = 120, --GAMEMODE.TimeToExfil
+            UseHatch = 0
         } 
     }
     table.insert( storage[game.GetMap()], data )
@@ -40,6 +56,18 @@ concommand.Add("exfil_create", function( ply, cmd, args )
         CreateMapData( args[1] )
     else
         ply:ChatPrint("[EXFIL] error : Map data has already been created!")
+    end
+    PrintTable(storage)
+end)
+
+--example : exfil_delete testarea
+concommand.Add("exfil_delete", function( ply, cmd, args )
+    for _, data in ipairs( storage[ game.GetMap() ] ) do
+        for area, stored in pairs( data ) do
+            if area == args[1] then
+                table.remove( storage[ game.GetMap() ], _ )
+            end
+        end
     end
     PrintTable(storage)
 end)
@@ -58,6 +86,18 @@ concommand.Add("exfil_origin", function( ply, cmd, args )
 
     PrintTable(storage)
 end)
+
+--example : exfil_pos testarea 10 10 10
+concommand.Add("exfil_pos", function( ply, cmd, args )
+    for _, data in ipairs( storage[ game.GetMap() ] ) do
+        for area, stored in pairs( data ) do
+            if area == args[1] then
+                stored.Pos = Vector( args[2], args[3], args[4] )
+            end
+        end
+    end
+end)
+
 --example : exfil_size testarea 200 200 200
 concommand.Add("exfil_size", function( ply, cmd, args )
     end_pos = Vector( args[2], args[3], args[4] )
@@ -71,7 +111,8 @@ concommand.Add("exfil_size", function( ply, cmd, args )
 
     PrintTable(storage)
 end)
---example : exfil_config testarea 0 3 5 120
+
+--example : exfil_config testarea 0 3 5 120 0
 concommand.Add("exfil_config", function( ply, cmd, args )
     for _, data in ipairs( storage[ game.GetMap() ] ) do
         for area, stored in pairs( data ) do
@@ -80,12 +121,14 @@ concommand.Add("exfil_config", function( ply, cmd, args )
                 stored.ZombieSlayDelay = args[3]
                 stored.ExfilTime = args[4]
                 stored.ExfilDeadline = args[5]
+                stored.UseHatch = args[6]
             end
         end
     end
 
     PrintTable(storage)
 end)
+
 --example : exfil_save
 concommand.Add("exfil_save", function( ply, cmd, args )
     local tab = util.TableToJSON( storage )
