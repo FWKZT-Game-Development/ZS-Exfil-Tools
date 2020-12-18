@@ -96,6 +96,8 @@ concommand.Add("exfil_pos", function( ply, cmd, args )
             end
         end
     end
+
+    PrintTable(storage)
 end)
 
 --example : exfil_size testarea 200 200 200
@@ -146,7 +148,39 @@ hook.Add( "PostDrawTranslucentRenderables", "ZS.ExfilTool", function( bDepth, bS
                 if stored.Pos ~= nil then
                     render.SetColorMaterial()
                     render.DrawBox( stored.Pos, Angle(0,0,0), Vector(0,0,0), stored.BoxSize or Vector(25,25,25), Color( 161, 255, 156, math.floor( math.sin( CurTime() * 8 ) * 5 ) + 10 ) )
-                    render.DrawWireframeBox( stored.Pos, Angle(0,0,0), Vector(0,0,0), stored.BoxSize or Vector(25,25,25), Color( 161, 255, 156 ), true )
+                    render.DrawWireframeBox( stored.Pos, Angle(0,0,0), Vector(0,0,0), stored.BoxSize or Vector(25,25,25), Color( 161, 255, 156 ), false )
+
+                    local pos, distance, ang, alpha
+                    local eyepos = EyePos()
+                    combined_vec = stored.BoxSize
+                    local vx,vy,vz = combined_vec.x, combined_vec.y, combined_vec.z
+            
+                    vx = vx/2
+                    vy = vy/2
+                    vz = 64
+            
+                    pos = stored.Pos+Vector( vx, vy, vz )
+            
+                    distance = eyepos:DistToSqr(pos)
+
+                    alpha = math.min(255, math.sqrt(distance / 5))
+                    ang = (eyepos - pos):Angle()
+                    ang:RotateAroundAxis(ang:Right(), 270)
+                    ang:RotateAroundAxis(ang:Up(), 90)
+            
+                    cam.IgnoreZ(true)
+                    cam.Start3D2D(pos, ang, math.max(1200, math.sqrt(distance)) / 5000)
+                    local oldfogmode = render.GetFogMode()
+                    render.FogMode(0)
+            
+                    surface.SetFont( "Trebuchet24" )
+                    surface.SetTextColor( 255, 255, 255, alpha )
+                    surface.SetTextPos( 0, 0 ) 
+                    surface.DrawText( area )
+            
+                    render.FogMode(oldfogmode)
+                    cam.End3D2D()
+                    cam.IgnoreZ(false)
                 end
             end
         end
