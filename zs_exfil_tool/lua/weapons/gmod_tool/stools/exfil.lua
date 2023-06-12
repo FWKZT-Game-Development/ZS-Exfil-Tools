@@ -279,9 +279,9 @@ function TOOL.BuildCPanel( CPanel )
 end
 
 hook.Add("PostDrawTranslucentRenderables", "ExfilToolgunDraw", function(_, bDrawingSkybox)
-	if not GetConVar("exfil_show"):GetBool() then return end
+	if GetConVar("exfil_show") and not GetConVar("exfil_show"):GetBool() then return end
 	if bDrawingSkybox then return end
-	if ExfilStorage[ game.GetMap() ] then
+	if ExfilStorage and ExfilStorage[ game.GetMap() ] then
 		for area, data in pairs( ExfilStorage[ game.GetMap() ] ) do
 			for area, stored in pairs( data ) do
 				
